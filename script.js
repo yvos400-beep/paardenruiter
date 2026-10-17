@@ -25,17 +25,19 @@ const articles = [
     excerpt: "Droge, scheurende hoeven vragen om meer dan hoefvet. Biotine en zink helpen de hoorn sterker te groeien."
   },
   {
-    category: "verzorging", time: 3, image: "images/vliegenplaag.jpg",
+    category: "verzorging", time: 5, image: "images/vliegenplaag.jpg",
+    url: "/artikelen/vliegenplaag-in-de-wei",
     title: "Vliegenplaag in de wei? Bescherm je paard goed",
     excerpt: "Insecten bezorgen je paard stress en huidirritatie. Zo houd je de wei draaglijk in het warme seizoen."
   }
 ];
 
 const grid = document.getElementById("article-grid");
+if (grid) {
 const label = c => c.charAt(0).toUpperCase() + c.slice(1);
 
 grid.innerHTML = articles.map(a => `
-  <a href="#" class="article-card" data-category="${a.category}">
+  <a href="${a.url || "#"}" class="article-card" data-category="${a.category}">
     <div class="img-wrap"><img src="${a.image}" alt="" loading="lazy"></div>
     <div class="article-body">
       <p class="meta">${label(a.category)} <span>•</span> ${a.time} min leestijd</p>
@@ -45,12 +47,15 @@ grid.innerHTML = articles.map(a => `
     </div>
   </a>`).join("");
 
+}
+
 // Hide broken images so the gradient fallback shows
 document.querySelectorAll(".img-wrap img").forEach(img => {
   img.addEventListener("error", () => { img.style.visibility = "hidden"; });
 });
 
 // Filters
+if (grid) {
 const chips = document.querySelectorAll(".chip");
 function applyFilter(filter) {
   chips.forEach(c => c.classList.toggle("is-active", c.dataset.filter === filter));
@@ -62,6 +67,7 @@ chips.forEach(chip => chip.addEventListener("click", () => applyFilter(chip.data
 document.querySelectorAll(".theme-card").forEach(card =>
   card.addEventListener("click", () => applyFilter(card.dataset.theme))
 );
+}
 
 // Mobile nav
 const toggle = document.querySelector(".nav-toggle");
@@ -78,7 +84,7 @@ nav.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
 // Newsletter
 const form = document.getElementById("newsletter-form");
 const msg = document.getElementById("form-msg");
-form.addEventListener("submit", e => {
+if (form) form.addEventListener("submit", e => {
   e.preventDefault();
   const email = form.querySelector("#email");
   if (!email.checkValidity() || !email.value) {
