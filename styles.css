@@ -96,7 +96,7 @@ p { margin: 0; }
 .nav-toggle span { display: block; width: 24px; height: 2px; background: var(--navy); margin: 5px 0; border-radius: 2px; }
 
 /* Hero */
-.hero { padding: 52px 0 40px; background: linear-gradient(180deg, #f3f3f3, var(--cream)); }
+.hero { padding: 52px 0 40px; background: var(--cream); }
 .hero-card {
   display: grid; grid-template-columns: 1.05fr 1fr; gap: 3rem; align-items: center;
   padding: 3.5rem 3.2rem;
