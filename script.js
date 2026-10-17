@@ -1,6 +1,8 @@
 const articles = [
   {
-    category: "voeding", time: 3, image: "images/elektrolyten.jpg",
+    category: "voeding", time: 5, image: "images/elektrolyten.jpg",
+    url: "/artikelen/elektrolyten-paard-zomer",
+    imagePos: "center 65%",
     title: "Zweet je paard veel in de zomer? Herstel met elektrolyten",
     excerpt: "Zwaar zweten kost meer dan water alleen. Met elektrolyten vul je mineralen aan en voorkom je uitdroging."
   },
@@ -38,7 +40,7 @@ const label = c => c.charAt(0).toUpperCase() + c.slice(1);
 
 grid.innerHTML = articles.map(a => `
   <a href="${a.url || "#"}" class="article-card" data-category="${a.category}">
-    <div class="img-wrap"><img src="${a.image}" alt="" loading="lazy"></div>
+    <div class="img-wrap"><img src="${a.image}" alt="" loading="lazy"${a.imagePos ? ` style="object-position: ${a.imagePos}"` : ""}></div>
     <div class="article-body">
       <p class="meta">${label(a.category)} <span>•</span> ${a.time} min leestijd</p>
       <h3>${a.title}</h3>
