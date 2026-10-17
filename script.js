@@ -9,7 +9,7 @@ const articles = [
   {
     category: "gezondheid", time: 5, image: "images/magnesium.jpg",
     url: "/artikelen/magnesium-paard-stijve-spieren",
-    imagePos: "center 15%",
+    imagePos: "center top",
     title: "Stijve spieren na het rijden? Magnesium maakt het verschil",
     excerpt: "Spierstijfheid en stress hangen vaak samen met een magnesiumtekort. Zo herken je het en pak je het aan."
   },
