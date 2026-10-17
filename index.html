@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaardEnRuiter – Kies slim, voor je paard</title>
+  <meta name="description" content="Praktische gidsen voor paardeneigenaren. Elk artikel lost één probleem op.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="#" class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" fill-rule="evenodd"><path d="M13.6 1.5l1.3 2.6c.3-.1.6-.1.9-.1l1-2.3.9 3c2.6 1.4 4.1 4.3 4.3 8.3l.3 8.5h-9.6c.1-2.6-.6-4.7-2.2-6.1l-3.6 1.3c-1.7.6-3.6-.4-3.9-2.1-.2-.9.1-1.8.8-2.4l5-5.3c.8-.9 1.8-1.5 2.9-1.9zM12.3 7.4a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z"/></svg>
+      </span>
+      <span class="brand-text">
+        <strong>PaardEnRuiter</strong>
+        <small>Kies slim, voor je paard.</small>
+      </span>
+    </a>
+    <nav class="main-nav" id="main-nav" aria-label="Hoofdmenu">
+      <a href="#home">Home</a>
+      <a href="#artikelen">Artikelen</a>
+      <a href="#themas">Categorieën</a>
+      <a href="#uitgelicht">Producten</a>
+      <a href="#nieuwsbrief">Over ons</a>
+    </nav>
+    <a href="#nieuwsbrief" class="btn btn-primary header-cta">Contact</a>
+    <button class="nav-toggle" aria-label="Menu openen" aria-expanded="false" aria-controls="main-nav">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="container">
+      <div class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Praktische gidsen voor paardeneigenaren</p>
+          <h1>Elk artikel lost één probleem op.</h1>
+          <p class="lead">Van een kieskeurige eter tot een zadel dat schuift: wij zoeken het probleem uit en verwijzen je direct naar het product dat helpt.</p>
+        </div>
+        <div class="hero-media">
+          <div class="hero-frame"></div>
+          <div class="img-wrap hero-img">
+            <img src="images/hero-springen.jpg" alt="Ruiter springt met een donkerbruin paard over een hindernis tijdens een concours">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UITGELICHT -->
+  <section class="featured" id="uitgelicht">
+    <div class="container featured-grid">
+      <a href="#" class="featured-visual img-wrap">
+        <img src="images/vliegenplaag.jpg" alt="Paarden met vliegenmaskers grazen in de wei">
+        <div class="featured-overlay">
+          <p class="meta meta-light">Verzorging <span>•</span> 3 min leestijd</p>
+          <h2>Vliegenplaag in de wei? Bescherm je paard goed</h2>
+        </div>
+      </a>
+      <aside class="featured-panel">
+        <p class="eyebrow">Uitgelicht probleem</p>
+        <h3>Je paard staat te stampen van de vliegen en dazen.</h3>
+        <p class="muted">Insecten bezorgen je paard stress en huidirritatie. Zo houd je de wei draaglijk in het warme seizoen.</p>
+        <div class="product-card">
+          <div class="img-wrap product-thumb">
+            <img src="images/vliegendeken.jpg" alt="Paard met vliegendeken">
+          </div>
+          <div>
+            <p class="eyebrow small">Aanbevolen product</p>
+            <p class="product-name">Vliegendeken met hals</p>
+            <p class="muted">€54,90</p>
+          </div>
+        </div>
+        <a href="#" class="btn btn-primary btn-block">Lees de oplossing <span class="arrow">→</span></a>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ARTIKELEN -->
+  <section class="articles" id="artikelen">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Alle artikelen</p>
+          <h2 class="section-title">Kies je probleem</h2>
+        </div>
+        <div class="filters" role="tablist" aria-label="Filter op thema">
+          <button class="chip is-active" data-filter="alles">Alles</button>
+          <button class="chip" data-filter="voeding">Voeding</button>
+          <button class="chip" data-filter="gezondheid">Gezondheid</button>
+          <button class="chip" data-filter="training">Training</button>
+          <button class="chip" data-filter="verzorging">Verzorging</button>
+        </div>
+      </div>
+      <div class="article-grid" id="article-grid"></div>
+    </div>
+  </section>
+
+  <!-- THEMA'S -->
+  <section class="themes" id="themas">
+    <div class="container">
+      <p class="eyebrow">Thema's</p>
+      <h2 class="section-title narrow">Kies het thema dat bij jouw vraag past</h2>
+      <div class="theme-grid">
+        <a href="#artikelen" class="theme-card" data-theme="voeding">
+          <span class="theme-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.7 3.3c-2 0-3.8.9-5 2.3-.6-.6-1.4-.9-2.2-.9.1 1 .5 1.9 1.2 2.6l-.4.6c-.7-.6-1.6-.9-2.5-.9.1 1.1.6 2 1.3 2.7l-.4.7c-.8-.6-1.7-.9-2.7-.9.1 1.1.6 2.1 1.5 2.8L3.3 19.5l1.2 1.2 5.2-5.2c.7.9 1.7 1.4 2.8 1.5 0-1-.3-1.9-.9-2.7l.7-.4c.7.7 1.6 1.2 2.7 1.3 0-.9-.3-1.8-.9-2.5l.6-.4c.7.7 1.6 1.1 2.6 1.2 0-.8-.3-1.6-.9-2.2 1.4-1.2 2.3-3 2.3-5V3.3h-1z"/></svg></span>
+          <h3>Voeding</h3>
+          <p>Krachtvoer, supplementen en voerschema's voor paarden die te veel of te weinig eten.</p>
+          <span class="link">Bekijk artikelen <span class="arrow">→</span></span>
+        </a>
+        <a href="#artikelen" class="theme-card" data-theme="gezondheid">
+          <span class="theme-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.2C1.2 8.7 3 5 6.6 5c2.1 0 3.5 1.1 4.4 2.5C11.9 6.1 13.3 5 15.4 5 19 5 20.8 8.7 19.5 11.8 17.5 16.4 12 21 12 21z"/></svg></span>
+          <h3>Gezondheid</h3>
+          <p>Van hoeven en huid tot spieren en weerstand: voorkomen en oplossen.</p>
+          <span class="link">Bekijk artikelen <span class="arrow">→</span></span>
+        </a>
+        <a href="#artikelen" class="theme-card" data-theme="training">
+          <span class="theme-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 6h2.5v12H6zM15.5 6H18v12h-2.5zM3 9h2v6H3zM19 9h2v6h-2zM9.5 11h5v2h-5z"/></svg></span>
+          <h3>Training</h3>
+          <p>Van een schuivend zadel tot stijve spieren: stap voor stap beter rijden.</p>
+          <span class="link">Bekijk artikelen <span class="arrow">→</span></span>
+        </a>
+        <a href="#artikelen" class="theme-card" data-theme="verzorging">
+          <span class="theme-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2 4 5v6c0 5.2 3.4 9.9 8 11 4.6-1.1 8-5.8 8-11V5l-8-3zm0 2.2v15.7c-3.4-1.1-6-4.8-6-8.9V6.4l6-2.2z"/></svg></span>
+          <h3>Verzorging</h3>
+          <p>Stalling, poetsen en dagelijkse routines die het verschil maken.</p>
+          <span class="link">Bekijk artikelen <span class="arrow">→</span></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- NIEUWSBRIEF -->
+  <section class="newsletter-section" id="nieuwsbrief">
+    <div class="container">
+      <div class="newsletter">
+        <div class="newsletter-copy">
+          <p class="eyebrow eyebrow-sand">Nieuwsbrief</p>
+          <h2>Eén praktische oplossing per week</h2>
+          <p>Schrijf je in en ontvang wekelijks een nieuw artikel met het product dat het probleem oplost.</p>
+        </div>
+        <form class="newsletter-form" id="newsletter-form" novalidate>
+          <label class="sr-only" for="email">E-mailadres</label>
+          <input id="email" type="email" placeholder="jij@voorbeeld.nl" required>
+          <label class="sr-only" for="thema">Thema</label>
+          <select id="thema">
+            <option>Alle thema's</option>
+            <option>Voeding</option>
+            <option>Gezondheid</option>
+            <option>Training</option>
+            <option>Verzorging</option>
+          </select>
+          <button type="submit" class="btn btn-primary btn-block">Aanmelden</button>
+          <p class="form-msg" id="form-msg" role="status"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p><strong>PaardEnRuiter</strong> · Kies slim, voor je paard.</p>
+    <p class="muted">© 2026 PaardEnRuiter. Alle rechten voorbehouden.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
