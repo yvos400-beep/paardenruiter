@@ -7,7 +7,9 @@ const articles = [
     excerpt: "Zwaar zweten kost meer dan water alleen. Met elektrolyten vul je mineralen aan en voorkom je uitdroging."
   },
   {
-    category: "gezondheid", time: 4, image: "images/magnesium.jpg",
+    category: "gezondheid", time: 5, image: "images/magnesium.jpg",
+    url: "/artikelen/magnesium-paard-stijve-spieren",
+    imagePos: "center 15%",
     title: "Stijve spieren na het rijden? Magnesium maakt het verschil",
     excerpt: "Spierstijfheid en stress hangen vaak samen met een magnesiumtekort. Zo herken je het en pak je het aan."
   },
