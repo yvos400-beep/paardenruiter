@@ -294,7 +294,7 @@ p { margin: 0; }
 .img-wrap.img-contain { background: var(--white); }
 .img-wrap.img-contain img { object-fit: contain; padding: 8%; }
 .article-cover-product { aspect-ratio: 16 / 7; border: 1px solid var(--line); }
-.article-cover-product img { padding: 4% 10%; }
+.article-cover-product img { padding: 5% 8%; }
 .product-box-aff .btn { margin-top: 1rem; }
 .product-box-aff .img-wrap img { object-position: center; }
 .small-text { font-size: .9rem; }

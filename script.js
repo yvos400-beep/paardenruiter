@@ -1,5 +1,12 @@
 const articles = [
   {
+    category: "training", time: 4, image: "images/therapy-deken.jpg",
+    url: "/artikelen/spierherstel-paard-therapiedeken",
+    imageFit: "contain",
+    title: "Sneller herstel na de training: zo houd je de spieren van je paard soepel",
+    excerpt: "Warming-up, uitstappen en je paard warm houden: zo help je de spieren herstellen. Plus: wat een therapiedeken wel en niet doet."
+  },
+  {
     category: "verzorging", time: 7, image: "images/deken.jpg",
     url: "/artikelen/welke-deken-paard-hoeveel-gram",
     imagePos: "center 35%",
