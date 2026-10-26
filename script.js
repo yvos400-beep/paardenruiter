@@ -1,5 +1,12 @@
 const articles = [
   {
+    category: "verzorging", time: 9, image: "https://www.ej.nl/img/scheermachine-farmclipper-akku-diverse_111779.png",
+    url: "/artikelen/paard-scheren-scheermachine",
+    imageFit: "contain",
+    title: "Paard scheren: wanneer, hoe en met welke scheermachine?",
+    excerpt: "Een dikke wintervacht en veel zweten? Lees wanneer je scheert, welk scheermodel past en hoe je het zelf netjes doet."
+  },
+  {
     category: "voeding", time: 5, image: "images/elektrolyten.jpg",
     url: "/artikelen/elektrolyten-paard-zomer",
     imagePos: "center 65%",
@@ -42,7 +49,7 @@ const label = c => c.charAt(0).toUpperCase() + c.slice(1);
 
 grid.innerHTML = articles.map(a => `
   <a href="${a.url || "#"}" class="article-card" data-category="${a.category}">
-    <div class="img-wrap"><img src="${a.image}" alt="" loading="lazy"${a.imagePos ? ` style="object-position: ${a.imagePos}"` : ""}></div>
+    <div class="img-wrap${a.imageFit === "contain" ? " img-contain" : ""}"><img src="${a.image}" alt="" loading="lazy"${a.imagePos ? ` style="object-position: ${a.imagePos}"` : ""}></div>
     <div class="article-body">
       <p class="meta">${label(a.category)} <span>•</span> ${a.time} min leestijd</p>
       <h3>${a.title}</h3>
