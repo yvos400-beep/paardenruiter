@@ -2,6 +2,7 @@ const articles = [
   {
     category: "verzorging", time: 7, image: "images/deken.jpg",
     url: "/artikelen/welke-deken-paard-hoeveel-gram",
+    imagePos: "center 35%",
     title: "Welke deken heeft je paard nodig? Hoeveel gram bij welke temperatuur",
     excerpt: "Deken erop of niet, en welke dan? Met deze temperatuurtabel en een paar vuistregels kies je in een paar seconden de juiste deken."
   },
