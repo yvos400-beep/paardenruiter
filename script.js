@@ -1,5 +1,11 @@
 const articles = [
   {
+    category: "verzorging", time: 7, image: "images/deken.jpg",
+    url: "/artikelen/welke-deken-paard-hoeveel-gram",
+    title: "Welke deken heeft je paard nodig? Hoeveel gram bij welke temperatuur",
+    excerpt: "Deken erop of niet, en welke dan? Met deze temperatuurtabel en een paar vuistregels kies je in een paar seconden de juiste deken."
+  },
+  {
     category: "verzorging", time: 9, image: "https://www.ej.nl/img/scheermachine-farmclipper-akku-diverse_111779.png",
     url: "/artikelen/paard-scheren-scheermachine",
     imageFit: "contain",
