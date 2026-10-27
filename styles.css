@@ -318,5 +318,3 @@ p { margin: 0; }
 .product-box-text { grid-template-columns: 1fr; }
 .addon-list { margin-top: 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
 .addon-list ul { margin-top: .4rem; }
-.article-cover-wide { aspect-ratio: 1600 / 940; max-width: 900px; border: 1px solid var(--line); }
-.img-wrap.img-contain.article-cover-wide img { padding: 0; }

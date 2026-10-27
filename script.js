@@ -1,6 +1,6 @@
 const articles = [
   {
-    category: "verzorging", time: 7, image: "images/stallaarzen-vergelijking.jpg",
+    category: "verzorging", time: 7, image: "images/stallaarzen.jpg",
     url: "/artikelen/outdoorlaarzen-stal-vergelijking",
     title: "Outdoorlaarzen voor de stal: 5 modellen vergeleken",
     excerpt: "Covalliero, Ariat, Horka, Epplejeck of Pénélope? Zo kies je de stallaars die past bij jouw dag op stal."
