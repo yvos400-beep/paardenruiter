@@ -1,5 +1,11 @@
 const articles = [
   {
+    category: "gezondheid", time: 8, image: "images/koliek-colosan.jpg",
+    url: "/artikelen/koliek-paard-colosan",
+    title: "Koliek bij je paard: herkennen, handelen en waarom Colosan in je stal-EHBO hoort",
+    excerpt: "Herken koliek op tijd, weet wat je wél en níet doet en zorg dat je de juiste middelen al in huis hebt."
+  },
+  {
     category: "verzorging", time: 7, image: "images/deken.jpg",
     url: "/artikelen/welke-deken-paard-hoeveel-gram",
     imagePos: "center 35%",
