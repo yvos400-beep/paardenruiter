@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Strawberry Steve</title>
+<style>
+  @font-face {
+    font-family: "Fredoka";
+    src: url("./node_modules/@fontsource/fredoka/files/fredoka-latin-700-normal.woff2") format("woff2");
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: "Fredoka";
+    src: url("./node_modules/@fontsource/fredoka/files/fredoka-latin-600-normal.woff2") format("woff2");
+    font-weight: 600;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 1080px; height: 1920px; overflow: hidden; position: relative;
+    background:
+      radial-gradient(ellipse 70% 42% at 50% 47%, rgba(255,240,228,0.95) 0%, rgba(255,240,228,0) 70%),
+      linear-gradient(180deg, #ffd9c7 0%, #ffcfb9 55%, #f9c1a8 72%, #f5b8a0 100%);
+    font-family: "Fredoka", "Noto Color Emoji", sans-serif;
+  }
+  #vignette {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 85% 70% at 50% 50%, rgba(0,0,0,0) 60%, rgba(150,70,50,0.18) 100%);
+  }
+  canvas { position: absolute; inset: 0; width: 1080px; height: 1920px; }
+  .cap {
+    position: absolute; left: 50%; top: 250px;
+    transform-origin: 50% 50%;
+    white-space: nowrap; opacity: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .pill {
+    background: #fffaf6;
+    color: #3d1f1b;
+    font-weight: 700;
+    font-size: 70px;
+    line-height: 1;
+    letter-spacing: -0.5px;
+    padding: 30px 46px 34px;
+    border-radius: 999px;
+    box-shadow: 0 12px 0 rgba(196, 62, 66, 0.9), 0 26px 40px rgba(140, 50, 40, 0.22);
+  }
+  .pill.small { font-size: 52px; padding: 22px 38px 26px; font-weight: 600; }
+  .pill.red { background: #e8343f; color: #fffaf6; box-shadow: 0 12px 0 #9e1d2a, 0 26px 40px rgba(140, 50, 40, 0.25); }
+  .hl { color: #e3303c; }
+  .emoji { font-family: "Noto Color Emoji"; font-weight: 400; }
+  #anger {
+    position: absolute; left: 0; top: 0; font-size: 110px; opacity: 0;
+    font-family: "Noto Color Emoji"; transform-origin: 50% 50%;
+  }
+  #brand {
+    position: absolute; left: 0; right: 0; bottom: 120px; text-align: center;
+    font-weight: 600; font-size: 34px; letter-spacing: 6px; color: rgba(110, 45, 40, 0.55);
+    text-transform: uppercase; opacity: 0;
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="vignette"></div>
+
+<div class="cap" id="cap1"><div class="pill">Meet <span class="hl">Strawberry Steve</span> <span class="emoji">🍓</span></div></div>
+<div class="cap" id="cap2"><div class="pill">Emotionally <span class="hl">unavailable.</span></div></div>
+<div class="cap" id="cap3"><div class="pill">And honestly… <span class="hl">so are you.</span></div></div>
+<div class="cap" id="cap4">
+  <div class="pill small" id="w1">Welcome to</div>
+  <div class="pill red" id="w2">The Weird Little Universe</div>
+</div>
+<div id="anger">💢</div>
+<div id="brand">the weird little universe</div>
+
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+// ---------- helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, u) => a + (b - a) * u;
+const ss = (a, b, x) => { const u = clamp((x - a) / (b - a)); return u * u * (3 - 2 * u); };
+const easeInOut = u => u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+const easeOut = u => 1 - Math.pow(1 - u, 3);
+const easeOutBack = (u, s = 1.70158) => { const c3 = s + 1; return 1 + c3 * Math.pow(u - 1, 3) + s * Math.pow(u - 1, 2); };
+const seg = (t, a, b, e = x => x) => e(clamp((t - a) / (b - a)));
+const ring = (t, t0, f, d) => t < t0 ? 0 : Math.exp(-d * (t - t0)) * Math.sin(f * (t - t0)); // damped jiggle
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+// ---------- renderer / scene ----------
+const W = 1080, H = 1920;
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(30, W / H, 0.1, 100);
+
+// lights: soft warm key, pink fill, two rims for a cinematic edge
+scene.add(new THREE.HemisphereLight(0xfff3ea, 0xf0a890, 0.7));
+const key = new THREE.DirectionalLight(0xfff0e2, 2.3);
+key.position.set(-3.2, 5.5, 4.5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 0.5, far: 20 });
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.02;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xffd6e4, 0.75); fill.position.set(4, 1.5, 3); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 2.2); rim.position.set(2.5, 3, -4); scene.add(rim);
+const rim2 = new THREE.DirectionalLight(0xffd8b8, 1.4); rim2.position.set(-3, 1, -3.5); scene.add(rim2);
+
+const GROUND = -1.46;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ color: 0x8a3a2a, opacity: 0.14 }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = GROUND; floor.receiveShadow = true;
+scene.add(floor);
+
+function radialTex(inner, outer) {
+  const c = document.createElement("canvas"); c.width = c.height = 256;
+  const g = c.getContext("2d"), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, inner); gr.addColorStop(1, outer);
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const blob = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4),
+  new THREE.MeshBasicMaterial({ map: radialTex("rgba(120,40,30,0.55)", "rgba(120,40,30,0)"), transparent: true, depthWrite: false }));
+blob.rotation.x = -Math.PI / 2; blob.position.y = GROUND + 0.003; blob.scale.set(1, 0.62, 1);
+scene.add(blob);
+
+// ---------- clay noise bump ----------
+function noiseTex(seed) {
+  const c = document.createElement("canvas"); c.width = c.height = 512;
+  const g = c.getContext("2d"); const r = rng(seed);
+  const img = g.createImageData(512, 512);
+  for (let i = 0; i < img.data.length; i += 4) { const v = 110 + r() * 40; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  g.putImageData(img, 0, 0);
+  // thumbprint-ish soft blobs
+  for (let i = 0; i < 260; i++) {
+    const x = r() * 512, y = r() * 512, rad = 6 + r() * 26;
+    const gr = g.createRadialGradient(x, y, 0, x, y, rad);
+    const a = 0.10 + r() * 0.12, light = r() > 0.5;
+    gr.addColorStop(0, light ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`);
+    gr.addColorStop(1, "rgba(128,128,128,0)");
+    g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+  }
+  const c2 = document.createElement("canvas"); c2.width = c2.height = 512;
+  const g2 = c2.getContext("2d"); g2.filter = "blur(1.6px)"; g2.drawImage(c, 0, 0);
+  const t = new THREE.CanvasTexture(c2); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+const bump = noiseTex(7);
+bump.repeat.set(2, 1);
+
+// ---------- materials ----------
+const clay = (color, extra = {}) => new THREE.MeshPhysicalMaterial({
+  color, roughness: 0.5, clearcoat: 0.22, clearcoatRoughness: 0.4,
+  sheen: 0.5, sheenRoughness: 0.55, sheenColor: new THREE.Color(0xffb3a8),
+  bumpMap: bump, bumpScale: 0.35, ...extra });
+const bodyMat = clay(0xffffff, { vertexColors: true });
+const lidMat = clay(0xe23a43);
+const greenMat = clay(0x58b85a, { sheenColor: new THREE.Color(0xd8ffc0) });
+const greenDark = clay(0x3f9a46, { sheenColor: new THREE.Color(0xd8ffc0) });
+const seedMat = new THREE.MeshPhysicalMaterial({ color: 0xffe08a, roughness: 0.35, clearcoat: 0.6 });
+const darkMat = new THREE.MeshPhysicalMaterial({ color: 0x3a1714, roughness: 0.45, clearcoat: 0.3 });
+const scleraMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.03 });
+const irisMat = new THREE.MeshPhysicalMaterial({ color: 0x4a2418, roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.02 });
+const pupilMat = new THREE.MeshPhysicalMaterial({ color: 0x0a0505, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.02 });
+const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+const blushMat = new THREE.MeshStandardMaterial({ color: 0xff7f95, roughness: 1, transparent: true, opacity: 0.5, depthWrite: false });
+
+const shadowy = m => { m.castShadow = true; m.receiveShadow = true; return m; };
+
+// ---------- body ----------
+const root = new THREE.Group(); root.position.y = GROUND; scene.add(root);   // pivot on the floor
+const squash = new THREE.Group(); root.add(squash);
+const char = new THREE.Group(); char.position.y = -GROUND; squash.add(char);  // body center at y = 0
+
+const bodyGeo = new THREE.SphereGeometry(1, 160, 120);
+{
+  const p = bodyGeo.attributes.position, col = [];
+  const top = new THREE.Color(0xf2484c), mid = new THREE.Color(0xe32f3b), bot = new THREE.Color(0xc81f31), c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const radial = 1.0 + 0.07 * y - 0.13 * Math.max(0, -y) ** 2;
+    let ny = y < 0 ? y * 1.16 : y * 0.9;
+    ny -= 0.11 * ss(0.86, 1.0, y);                 // dimple where the leaves sit
+    p.setXYZ(i, x * radial * 0.98, ny, z * radial * 0.96);
+    if (y > 0) c.copy(mid).lerp(top, y); else c.copy(mid).lerp(bot, -y);
+    col.push(c.r, c.g, c.b);
+  }
+  bodyGeo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  bodyGeo.computeVertexNormals();
+}
+const body = shadowy(new THREE.Mesh(bodyGeo, bodyMat));
+char.add(body);
+
+// probe for surface placement (char-local space)
+const probe = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+probe.updateMatrixWorld();
+const ray = new THREE.Raycaster();
+const nm = new THREE.Matrix3();
+function surfDir(d) {               // shoot outwards from the centre
+  ray.set(new THREE.Vector3(0, 0, 0), d.clone().normalize());
+  const h = ray.intersectObject(probe)[0];
+  return { p: h.point.clone(), n: h.face.normal.clone() };
+}
+function surfAt(x, y) {             // project from the front
+  ray.set(new THREE.Vector3(x, y, 5), new THREE.Vector3(0, 0, -1));
+  const h = ray.intersectObject(probe)[0];
+  return { p: h.point.clone(), n: h.face.normal.clone() };
+}
+
+// seeds (kept off the face)
+{
+  const N = 120, ga = Math.PI * (3 - Math.sqrt(5));
+  const seedGeo = new THREE.SphereGeometry(1, 16, 12);
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (i + 0.5) / N * 2, r = Math.sqrt(1 - y * y), th = i * ga;
+    const d = new THREE.Vector3(Math.cos(th) * r, y, Math.sin(th) * r);
+    if (y > 0.72 || y < -0.93) continue;
+    if (d.z > 0.2 && Math.abs(d.x) < 0.78 && y > -0.62 && y < 0.62) continue; // face zone
+    if (d.z > 0.35 && y < -0.3 && y > -0.75 && Math.abs(d.x) < 0.5) continue;  // belly for crossed arms
+    const s = surfDir(d);
+    const m = new THREE.Mesh(seedGeo, seedMat);
+    m.scale.set(0.028, 0.042, 0.016);
+    m.position.copy(s.p).addScaledVector(s.n, -0.004);
+    m.lookAt(s.p.clone().add(s.n));
+    char.add(m);
+  }
+}
+
+// leaves + stem
+const leaves = new THREE.Group(); leaves.position.y = 0.835; char.add(leaves);
+const leafGeo = new THREE.SphereGeometry(1, 40, 20);
+{
+  const p = leafGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const taper = x > 0 ? 1 - 0.75 * x * x : 1 - 0.25 * x * x;
+    y *= taper; z *= taper;
+    x = x * 0.3 + 0.27; y = y * 0.055 + 0.25 * (x - 0.1) * (x - 0.1); z *= 0.16;
+    p.setXYZ(i, x, y, z);
+  }
+  leafGeo.computeVertexNormals();
+}
+const leafPivots = [];
+for (let i = 0; i < 6; i++) {
+  const g = new THREE.Group();
+  g.rotation.y = i * Math.PI / 3 + 0.25;
+  const tilt = new THREE.Group(); g.add(tilt);
+  const leaf = shadowy(new THREE.Mesh(leafGeo, i % 2 ? greenMat : greenDark));
+  leaf.scale.setScalar(i % 2 ? 1.0 : 0.88);
+  tilt.add(leaf);
+  leaves.add(g); leafPivots.push(tilt);
+}
+const stemCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.16, 0), new THREE.Vector3(0.06, 0.24, 0.02));
+const stem = shadowy(new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 16, 0.04, 12), greenDark));
+leaves.add(stem);
+const stemCap = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), greenDark); stemCap.position.set(0.06, 0.24, 0.02); leaves.add(stemCap);
+
+// ---------- face ----------
+const EYE_R = 0.27;
+const eyes = [];
+for (const s of [-1, 1]) {
+  const anchor = surfAt(s * 0.33, 0.17);
+  const eye = new THREE.Group();
+  eye.position.set(s * 0.33, 0.17, anchor.p.z - 0.13);
+  eye.rotation.y = s * 0.16;
+  char.add(eye);
+  eye.add(shadowy(new THREE.Mesh(new THREE.SphereGeometry(EYE_R, 64, 48), scleraMat)));
+  const gaze = new THREE.Group(); eye.add(gaze);
+  const iris = new THREE.Mesh(new THREE.SphereGeometry(EYE_R * 1.004, 64, 24, 0, Math.PI * 2, 0, 0.82), irisMat);
+  iris.rotation.x = Math.PI / 2; gaze.add(iris);
+  const pupil = new THREE.Mesh(new THREE.SphereGeometry(EYE_R * 1.008, 64, 16, 0, Math.PI * 2, 0, 0.5), pupilMat);
+  pupil.rotation.x = Math.PI / 2; gaze.add(pupil);
+  // glints (fixed to the light, not the gaze)
+  for (const [gx, gy, sc] of [[-0.38, 0.42, 0.055], [0.3, -0.18, 0.026]]) {
+    const d = new THREE.Vector3(gx, gy, 0.85).normalize();
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), glintMat);
+    gl.scale.set(sc, sc, sc * 0.25);
+    gl.position.copy(d).multiplyScalar(EYE_R * 1.012);
+    gl.lookAt(d.clone().multiplyScalar(2));
+    eye.add(gl);
+  }
+  // upper + lower lids (body-coloured clay caps)
+  const LR = EYE_R * 1.1;
+  const upTilt = new THREE.Group(); eye.add(upTilt);
+  const up = new THREE.Group(); upTilt.add(up);
+  up.add(shadowy(new THREE.Mesh(new THREE.SphereGeometry(LR, 64, 24, 0, Math.PI * 2, 0, Math.PI / 2), Object.assign(lidMat.clone(), { side: THREE.DoubleSide }))));
+  const upEdge = new THREE.Mesh(new THREE.TorusGeometry(LR, 0.016, 12, 96), lidMat); upEdge.rotation.x = Math.PI / 2; up.add(upEdge);
+  const lowTilt = new THREE.Group(); eye.add(lowTilt);
+  const low = new THREE.Group(); lowTilt.add(low);
+  low.add(new THREE.Mesh(new THREE.SphereGeometry(LR * 0.99, 64, 24, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), Object.assign(lidMat.clone(), { side: THREE.DoubleSide })));
+  const lowEdge = new THREE.Mesh(new THREE.TorusGeometry(LR * 0.99, 0.013, 12, 96), lidMat); lowEdge.rotation.x = Math.PI / 2; low.add(lowEdge);
+  // brow
+  const brow = new THREE.Group(); char.add(brow);
+  const browMesh = shadowy(new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.19, 8, 16), darkMat));
+  browMesh.rotation.z = Math.PI / 2;
+  const browTilt = new THREE.Group(); browTilt.add(browMesh); brow.add(browTilt);
+  // blush
+  const bl = surfAt(s * 0.6, -0.16);
+  const blush = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), blushMat);
+  blush.scale.set(0.12, 0.075, 0.02);
+  blush.position.copy(bl.p).addScaledVector(bl.n, 0.004); blush.lookAt(bl.p.clone().add(bl.n));
+  char.add(blush);
+  eyes.push({ s, eye, gaze, up, upTilt, low, lowTilt, brow, browTilt });
+}
+
+// mouth (rebuilt each frame from a curve on the surface)
+const mouth = new THREE.Group(); char.add(mouth);
+const mouthTube = new THREE.Mesh(new THREE.BufferGeometry(), darkMat); mouth.add(mouthTube);
+const mouthCapA = new THREE.Mesh(new THREE.SphereGeometry(0.02, 12, 8), darkMat), mouthCapB = mouthCapA.clone();
+mouth.add(mouthCapA, mouthCapB);
+function setMouth(w, k, y0) {
+  const pts = [];
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10 * 2 - 1, x = u * w, y = y0 - k * u * u + k * 0.35;
+    const s = surfAt(x, y); pts.push(s.p.addScaledVector(s.n, 0.008));
+  }
+  mouthTube.geometry.dispose();
+  mouthTube.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 32, 0.02, 10);
+  mouthCapA.position.copy(pts[0]); mouthCapB.position.copy(pts[10]);
+}
+
+// ---------- limbs ----------
+const UP = new THREE.Vector3(0, 1, 0);
+const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 20, 1, true); cylGeo.translate(0, 0.5, 0);
+function makeArm(s) {
+  const g = new THREE.Group(); char.add(g);
+  const up = shadowy(new THREE.Mesh(cylGeo, greenMat)), fo = shadowy(new THREE.Mesh(cylGeo, greenMat));
+  const j0 = shadowy(new THREE.Mesh(new THREE.SphereGeometry(0.052, 16, 12), greenMat));
+  const j1 = shadowy(new THREE.Mesh(new THREE.SphereGeometry(0.052, 16, 12), greenMat));
+  const hand = shadowy(new THREE.Mesh(new THREE.SphereGeometry(0.085, 24, 16), greenMat));
+  g.add(up, fo, j0, j1, hand);
+  const sh = surfDir(new THREE.Vector3(s * 0.86, -0.3, 0.42)).p;
+  return { s, up, fo, j0, j1, hand, sh };
+}
+function placeSeg(m, a, b, r) {
+  const d = b.clone().sub(a), L = d.length();
+  m.position.copy(a); m.scale.set(r, L, r);
+  m.quaternion.setFromUnitVectors(UP, d.normalize());
+}
+const arms = [makeArm(-1), makeArm(1)];
+function pushOut(p, minR) { const l = p.length(); if (l < minR) p.multiplyScalar(minR / l); return p; }
+
+function setArm(a, cross, lift, limp) {
+  const s = a.s;
+  // rest: tiny arms hanging slightly outwards
+  const restDir = new THREE.Vector3(s * lerp(0.62, 0.35, limp), lerp(-0.75, -0.95, limp), 0.2).normalize();
+  restDir.applyAxisAngle(new THREE.Vector3(0, 0, 1), s * lift);
+  const restHand = a.sh.clone().addScaledVector(restDir, 0.44);
+  // crossed: each hand tucks over to the other side of the belly
+  const crossHand = new THREE.Vector3(-s * 0.3, s > 0 ? -0.46 : -0.64, s > 0 ? 1.0 : 0.93);
+  const hand = restHand.clone().lerp(crossHand, cross);
+  pushOut(hand, lerp(1.0, 1.08, cross));
+  const mid = a.sh.clone().lerp(hand, 0.5);
+  const elbow = pushOut(mid.clone().add(new THREE.Vector3(s * 0.05, -0.03, 0.04).multiplyScalar(1 - cross)), lerp(0.98, s > 0 ? 1.1 : 1.07, cross));
+  placeSeg(a.up, a.sh, elbow, 0.05); placeSeg(a.fo, elbow, hand, 0.05);
+  a.j0.position.copy(a.sh); a.j1.position.copy(elbow); a.hand.position.copy(hand);
+}
+
+const legs = [-1, 1].map(s => {
+  const g = new THREE.Group(); char.add(g);
+  const leg = shadowy(new THREE.Mesh(cylGeo, greenMat));
+  const foot = shadowy(new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), greenMat));
+  foot.scale.set(0.12, 0.075, 0.16);
+  g.add(leg, foot);
+  return { s, leg, foot };
+});
+function setLeg(l, lift) {
+  const hip = new THREE.Vector3(l.s * 0.26, -0.9, 0.0);
+  const ankle = new THREE.Vector3(l.s * 0.3, -1.36 + lift, 0.05);
+  placeSeg(l.leg, hip, ankle, 0.055);
+  l.foot.position.set(l.s * 0.31, -1.385 + lift, 0.1);
+  l.foot.rotation.x = -lift * 2.5;
+}
+
+// ---------- pop particles ----------
+const confetti = [];
+{
+  const r = rng(42), cols = [0xffffff, 0xff9fb4, 0xa8e6c4, 0xffe28a, 0xc9b6ff, 0xff6f7d];
+  for (let i = 0; i < 22; i++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshPhysicalMaterial({ color: cols[i % cols.length], roughness: 0.35, clearcoat: 0.5 }));
+    const a = (i / 22) * Math.PI * 2 + r() * 0.3;
+    confetti.push({ m, dir: new THREE.Vector3(Math.cos(a), Math.sin(a) * 0.9 + 0.15, (r() - 0.3) * 0.8).normalize(), dist: 1.4 + r() * 0.9, size: 0.05 + r() * 0.07, delay: r() * 0.08 });
+    scene.add(m);
+  }
+}
+const puff = new THREE.Mesh(new THREE.TorusGeometry(1, 0.03, 12, 64), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false }));
+puff.rotation.x = -Math.PI / 2; scene.add(puff);
+
+// ---------- camera keys ----------
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const camKeys = [
+  { t: 0.0,  p: V(0, 0.95, 11.2), l: V(0, 0.35, 0), r: 0.0, e: easeOut },
+  { t: 1.5,  p: V(0.35, 0.5, 8.7), l: V(0, 0.32, 0), r: 0.0, e: easeOut },
+  { t: 2.0,  p: V(0.35, 0.48, 8.55), l: V(0, 0.32, 0), r: 0.0, e: easeInOut },
+  { t: 5.0,  p: V(2.1, 0.95, 7.9), l: V(0, 0.3, 0), r: -0.025, e: easeInOut },
+  { t: 5.65, p: V(1.0, 0.42, 6.6), l: V(0, 0.42, 0), r: 0.045, e: u => easeOutBack(u, 1.2) },
+  { t: 8.0,  p: V(0.6, 0.38, 6.0), l: V(0, 0.42, 0), r: 0.055, e: easeInOut },
+  { t: 8.45, p: V(0, 0.4, 7.9), l: V(0, 0.33, 0), r: 0.0, e: easeInOut },
+  { t: 10.0, p: V(0, 0.38, 7.45), l: V(0, 0.33, 0), r: 0.0, e: easeInOut },
+];
+function cameraAt(t) {
+  let i = 0; while (i < camKeys.length - 2 && t > camKeys[i + 1].t) i++;
+  const a = camKeys[i], b = camKeys[i + 1], u = b.e(clamp((t - a.t) / (b.t - a.t)));
+  const p = a.p.clone().lerp(b.p, u), l = a.l.clone().lerp(b.l, u), r = lerp(a.r, b.r, u);
+  // gentle floating "operator" drift, quieter during the deadpan ending
+  const amp = 1 - 0.85 * ss(8.2, 8.6, t);
+  p.x += Math.sin(t * 1.3) * 0.04 * amp; p.y += Math.sin(t * 1.7 + 1) * 0.03 * amp;
+  camera.position.copy(p); camera.up.set(Math.sin(r), Math.cos(r), 0); camera.lookAt(l);
+}
+
+// ---------- DOM overlays ----------
+const caps = [
+  { el: document.getElementById("cap1"), a: 0.65, b: 2.25, rot: -2.5, top: 240 },
+  { el: document.getElementById("cap2"), a: 2.45, b: 5.0, rot: 2, top: 240 },
+  { el: document.getElementById("cap3"), a: 5.55, b: 8.05, rot: -2, top: 240 },
+  { el: document.getElementById("cap4"), a: 8.35, b: 99, rot: 0, top: 205 },
+];
+const w1 = document.getElementById("w1"), w2 = document.getElementById("w2");
+const anger = document.getElementById("anger"), brand = document.getElementById("brand");
+const springIn = u => u <= 0 ? 0 : 1 - Math.exp(-7 * u) * Math.cos(13 * u);
+function overlays(t) {
+  for (const c of caps) {
+    const tin = t - c.a, tout = t - c.b;
+    let sc = springIn(tin), op = clamp(tin / 0.12);
+    if (tout > 0) { const u = clamp(tout / 0.22); sc *= 1 - 0.35 * easeInOut(u); op *= 1 - u; }
+    const wob = Math.sin(t * 2.2) * 0.8;
+    c.el.style.opacity = op.toFixed(3);
+    c.el.style.top = c.top + "px";
+    c.el.style.transform = `translate(-50%, 0) scale(${(0.4 + 0.6 * sc).toFixed(4)}) rotate(${(c.rot * (2 - sc) + wob * (c.rot ? 1 : 0)).toFixed(3)}deg)`;
+  }
+  // final lockup: second line lands a beat later
+  const u2 = springIn(t - 8.62);
+  w2.style.transform = `scale(${(0.3 + 0.7 * u2).toFixed(4)}) rotate(${(-3 * (1 - clamp(u2))).toFixed(3)}deg)`;
+  w2.style.opacity = clamp((t - 8.62) / 0.1).toFixed(3);
+  w1.style.transform = `rotate(${-2}deg)`;
+  brand.style.opacity = "0";
+  // anger mark next to the head
+  const ta = t - 5.7, te = t - 7.95;
+  const p = new THREE.Vector3(-0.62, 0.98, 0.3); char.localToWorld(p); p.project(camera);
+  const x = (p.x * 0.5 + 0.5) * W, y = (-p.y * 0.5 + 0.5) * H;
+  const pulse = 1 + 0.12 * Math.max(0, Math.sin(t * 14));
+  let as = springIn(ta) * pulse, ao = clamp(ta / 0.1);
+  if (te > 0) { const u = clamp(te / 0.2); as *= 1 - u; ao *= 1 - u; }
+  anger.style.opacity = ao.toFixed(3);
+  anger.style.transform = `translate(${(x - 55).toFixed(1)}px, ${(y - 55).toFixed(1)}px) scale(${as.toFixed(3)}) rotate(-12deg)`;
+}
+
+// ---------- the performance ----------
+function blink(t, t0, close, hold, open) {
+  if (t < t0) return 0;
+  const a = t - t0;
+  if (a < close) return easeInOut(a / close);
+  if (a < close + hold) return 1;
+  return 1 - easeInOut(clamp((a - close - hold) / open));
+}
+
+window.renderAt = function (t) {
+  cameraAt(t);
+
+  // phases: 0 stare, 1 exhausted, 2 annoyed, 3 deadpan
+  const P1 = ss(2.0, 2.6, t), P2 = ss(5.05, 5.45, t), P3 = ss(8.0, 8.35, t);
+  const mix = (a, b, c, d) => lerp(lerp(lerp(a, b, P1), c, P2), d, P3);
+
+  // --- pop in ---
+  const popS = t < 0.12 ? 0 : easeOutBack(seg(t, 0.12, 0.5), 2.2);
+  const air = seg(t, 0.12, 0.74);
+  const hop = t > 0.12 && t < 0.74 ? 4 * 0.75 * air * (1 - air) : 0;
+  let sy = 1, sx = 1;
+  if (t < 0.74) { const st = Math.sin(Math.PI * air); sy = 1 + 0.14 * st; }
+  const land = t >= 0.74 ? Math.exp(-5.5 * (t - 0.74)) * Math.cos(17 * (t - 0.74)) : 0;
+  sy -= 0.2 * land;
+  // breathing, exhaustion slump, sigh, "hmph"
+  sy += 0.01 * Math.sin(t * 2.6) * (1 - 0.8 * P3);
+  sy += mix(0, -0.045, 0, 0);
+  sy += 0.05 * ss(3.45, 3.85, t) * (1 - ss(3.95, 4.5, t)) - 0.035 * ss(3.95, 4.5, t) * (1 - P2);
+  sy += 0.07 * ring(t, 5.45, 20, 6) + 0.05 * ring(t, 8.0, 22, 7);
+  sx = 1 / Math.sqrt(sy);
+  root.scale.set(popS * sx, popS * sy, popS * sx);
+  root.position.y = GROUND + hop;
+  root.visible = popS > 0.001;
+
+  // face the camera, with acting offsets
+  const faceCam = Math.atan2(camera.position.x, camera.position.z);
+  const spin = (1 - seg(t, 0.12, 0.8, easeOut)) * -1.4;
+  char.rotation.set(
+    mix(0, 0.07, -0.08, 0) + 0.06 * ring(t, 0.74, 12, 5),
+    faceCam + spin + mix(0, 0.08, -0.55, 0) + 0.05 * ring(t, 8.0, 14, 6),
+    mix(0, 0.075, -0.035, 0) - 0.04 * Math.sin(t * 1.1) * P1 * (1 - P2), "YXZ");
+  char.rotation.order = "YXZ";
+
+  // leaves: droop + jiggle
+  const droop = mix(0.0, 0.2, -0.1, 0.03) + 0.08 * ss(3.95, 4.5, t) * (1 - P2);
+  const jig = 0.35 * ring(t, 0.74, 16, 4.5) + 0.2 * ring(t, 5.45, 18, 5) + 0.15 * ring(t, 8.0, 18, 6) + 0.25 * (1 - seg(t, 0.12, 0.74)) * (t > 0.12 ? 1 : 0);
+  leafPivots.forEach((lp, i) => { lp.rotation.z = -(0.02 + droop) + jig * (i % 2 ? 1 : -0.7); });
+  leaves.rotation.y = 0.15 * ring(t, 0.74, 9, 3);
+
+  // eyes
+  const upBase = (() => {
+    let v = 0.04;
+    v = lerp(v, 0.2, ss(2.0, 2.3, t));
+    v = lerp(v, 0.42, ss(2.85, 3.5, t));
+    v = lerp(v, 0.3, P2);
+    v = lerp(v, 0.1, P3);
+    return v;
+  })();
+  const bl = Math.max(
+    blink(t, 2.3, 0.4, 0.25, 0.6),
+    blink(t, 4.25, 0.35, 0.18, 0.55),
+    blink(t, 9.15, 0.22, 0.12, 0.32));
+  const upper = lerp(upBase, Math.PI / 2 + 0.02, bl);
+  const lower = lerp(mix(1.2, 1.05, 0.6, 0.98), 0.25, bl * 0.25);
+  const tiltA = mix(0.0, -0.17, 0.33, 0.0);
+  const gx = mix(0.0, 0.16, -0.04, 0.0), gy = mix(0.0, -0.06, 0.48, 0.0);
+  const browA = mix(0.06, -0.24, 0.5, 0.0), browY = mix(0.0, -0.015, -0.07, -0.035);
+  for (const e of eyes) {
+    e.up.rotation.x = upper; e.low.rotation.x = lower;
+    e.upTilt.rotation.z = e.s * tiltA; e.lowTilt.rotation.z = -e.s * tiltA * 0.4;
+    e.gaze.rotation.set(gx, gy - e.s * 0.16 * 0.6, 0);
+    const bx = e.s * 0.34, by = 0.53 + browY + (e.s > 0 ? 0.02 * (1 - P1) : 0);
+    const sp = surfAt(bx, by);
+    e.brow.position.copy(sp.p).addScaledVector(sp.n, 0.02);
+    e.brow.lookAt(sp.p.clone().add(sp.n));
+    e.browTilt.rotation.z = e.s * browA + (e.s > 0 ? 0.08 * (1 - P1) : 0);
+  }
+
+  // mouth
+  setMouth(mix(0.1, 0.085, 0.07, 0.105), mix(0.008, 0.03, 0.04, 0.0), mix(-0.24, -0.245, -0.25, -0.24));
+
+  // arms
+  const cross = t < 5.12 ? 0 : easeOutBack(seg(t, 5.12, 5.5), 1.4);
+  const flail = (t > 0.12 && t < 0.9 ? Math.sin(Math.PI * seg(t, 0.12, 0.9)) * 1.1 : 0) + 0.35 * ring(t, 0.74, 15, 5);
+  const antic = 0.45 * Math.sin(Math.PI * seg(t, 4.95, 5.2)) * (t < 5.2 ? 1 : 0);
+  const limp = P1 * (1 - P2);
+  arms.forEach(a => setArm(a, clamp(cross, 0, 1.08), flail + antic + 0.06 * Math.sin(t * 2.6 + a.s), limp));
+
+  // legs (+ impatient foot tap)
+  const tap = t > 6.0 && t < 7.7 ? Math.max(0, Math.sin((t - 6.0) * Math.PI * 2 * 2.6)) * 0.07 : 0;
+  setLeg(legs[0], 0); setLeg(legs[1], tap);
+
+  // pop confetti + puff ring
+  for (const c of confetti) {
+    const u = seg(t, 0.2 + c.delay, 1.25 + c.delay);
+    const e = easeOut(u);
+    c.m.visible = u > 0 && u < 1;
+    c.m.position.set(0, 0.0, 0).addScaledVector(c.dir, 0.5 + c.dist * e);
+    c.m.position.y -= 0.6 * u * u;
+    c.m.scale.setScalar(c.size * Math.sin(Math.PI * Math.min(1, u * 1.15 + 0.05)));
+  }
+  const pu = seg(t, 0.15, 0.7);
+  puff.visible = pu > 0 && pu < 1;
+  puff.scale.setScalar(0.4 + 1.3 * easeOut(pu));
+  puff.position.y = GROUND + 0.02;
+  puff.material.opacity = 0.6 * (1 - pu) * (1 - pu);
+
+  // contact shadow
+  blob.scale.set(popS * (1 - hop * 0.4), popS * 0.62 * (1 - hop * 0.4), 1);
+  blob.material.opacity = 1 - hop * 0.9;
+
+  renderer.render(scene, camera);
+  overlays(t);
+};
+
+document.fonts.ready.then(() => { window.renderAt(0); window.READY = true; });
+</script>
+</body>
+</html>
